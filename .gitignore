@@ -1,0 +1,7 @@
+# use metals for build tool
+.bloop
+.metals
+project/metals.sbt
+
+# ignore bytecodes
+**/target

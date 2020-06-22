@@ -14,14 +14,10 @@ import sangria.schema.ListInputType
 
 object GraphQLSchema {
 
-  val LinkType = ObjectType[Unit, Link](
-    "Link",
-    fields[Unit, Link](
-      Field("id", IntType, resolve = _.value.id),
-      Field("url", StringType, resolve = _.value.url),
-      Field("description", StringType, resolve = _.value.description)
-    )
-  )
+  implicit val LinkType = deriveObjectType[Unit, Link]()
+
+  val Id = Argument("id", IntType)
+  val Ids = Argument("ids", ListInputType(IntType))
 
   val QueryType = ObjectType(
     "Query",
@@ -30,14 +26,14 @@ object GraphQLSchema {
       Field(
         "link",
         OptionType(LinkType),
-        arguments = List(Argument("id", IntType)),
-        resolve = c => c.ctx.dao.getLink(c.arg[Int]("id"))
+        arguments = Id :: Nil,
+        resolve = c => c.ctx.dao.getLink(c.arg(Id))
       ),
       Field(
         "links",
         ListType(LinkType),
-        arguments = List(Argument("ids", ListInputType(IntType))),
-        resolve = c => c.ctx.dao.getLinks(c.arg[Seq[Int]]("ids"))
+        arguments = Ids :: Nil,
+        resolve = c => c.ctx.dao.getLinks(c.arg(Ids))
       )
     )
   )

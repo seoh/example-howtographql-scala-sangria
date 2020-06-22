@@ -18,15 +18,17 @@ import sangria.execution.deferred.DeferredResolver
 object GraphQLSchema {
 
   implicit val LinkType = deriveObjectType[Unit, Link]()
-
-  val Id = Argument("id", IntType)
-  val Ids = Argument("ids", ListInputType(IntType))
+  implicit val linkHasId = HasId[Link, Int](_.id)
 
   val linksFetcher = Fetcher(
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getLinks(ids)
-  )// (HasId(_.id))
+  )
 
   val Resolver = DeferredResolver.fetchers(linksFetcher)
+
+
+  val Id = Argument("id", IntType)
+  val Ids = Argument("ids", ListInputType(IntType))
 
   val QueryType = ObjectType(
     "Query",

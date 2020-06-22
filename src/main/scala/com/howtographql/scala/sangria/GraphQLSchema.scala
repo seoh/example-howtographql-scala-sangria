@@ -10,6 +10,8 @@ import models.Link
 import sangria.schema.OptionType
 import sangria.schema.Argument
 import sangria.schema.ListInputType
+import sangria.execution.deferred.Fetcher
+import sangria.execution.deferred.HasId
 
 
 object GraphQLSchema {
@@ -19,6 +21,10 @@ object GraphQLSchema {
   val Id = Argument("id", IntType)
   val Ids = Argument("ids", ListInputType(IntType))
 
+  val linksFetcher = Fetcher(
+    (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getLinks(ids)
+  )// (HasId(_.id))
+
   val QueryType = ObjectType(
     "Query",
     fields[MyContext, Unit](
@@ -27,13 +33,13 @@ object GraphQLSchema {
         "link",
         OptionType(LinkType),
         arguments = Id :: Nil,
-        resolve = c => c.ctx.dao.getLink(c.arg(Id))
+        resolve = c => linksFetcher.deferOpt(c.arg(Id))
       ),
       Field(
         "links",
         ListType(LinkType),
         arguments = Ids :: Nil,
-        resolve = c => c.ctx.dao.getLinks(c.arg(Ids))
+        resolve = c => linksFetcher.deferSeq(c.arg(Ids))
       )
     )
   )

@@ -12,6 +12,7 @@ import sangria.schema.Argument
 import sangria.schema.ListInputType
 import sangria.execution.deferred.Fetcher
 import sangria.execution.deferred.HasId
+import sangria.execution.deferred.DeferredResolver
 
 
 object GraphQLSchema {
@@ -24,6 +25,8 @@ object GraphQLSchema {
   val linksFetcher = Fetcher(
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getLinks(ids)
   )// (HasId(_.id))
+
+  val Resolver = DeferredResolver.fetchers(linksFetcher)
 
   val QueryType = ObjectType(
     "Query",

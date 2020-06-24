@@ -6,7 +6,7 @@ import sangria.schema.ListType
 
 import sangria.schema.{IntType, StringType, Schema, fields}
 import sangria.macros.derive._
-import models.{Link, DateTimeCoerceViolation}
+import models.{Link, User, DateTimeCoerceViolation}
 import sangria.schema.OptionType
 import sangria.schema.Argument
 import sangria.schema.ListInputType
@@ -51,7 +51,14 @@ object GraphQLSchema {
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getLinks(ids)
   )
 
-  val Resolver = DeferredResolver.fetchers(linksFetcher)
+
+  val UserType = deriveObjectType[Unit, User]()
+  implicit val userHasId = HasId[User, Int](_.id)
+  val usersFetcher = Fetcher(
+    (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getUsers(ids)
+  )
+
+  val Resolver = DeferredResolver.fetchers(linksFetcher, usersFetcher)
 
 
   val Id = Argument("id", IntType)
@@ -72,6 +79,12 @@ object GraphQLSchema {
         ListType(LinkType),
         arguments = Ids :: Nil,
         resolve = c => linksFetcher.deferSeq(c.arg(Ids))
+      ),
+      Field(
+        "users",
+        ListType(UserType),
+        arguments = Ids :: Nil,
+        resolve = c => usersFetcher.deferSeq(c.arg(Ids))
       )
     )
   )

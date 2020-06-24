@@ -29,13 +29,33 @@ object DBSchema {
 
   val Links = TableQuery[LinksTable]
 
+
+  class UsersTable(tag: Tag) extends Table[User](tag, "USERS"){
+    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+    def name = column[String]("NAME")
+    def email = column[String]("EMAIL")
+    def password = column[String]("PASSWORD")
+    def createdAt = column[DateTime]("CREATED_AT")
+
+    def * = (id, name, email, password, createdAt).mapTo[User]
+  }
+
+  val Users = TableQuery[UsersTable]
+
+
   val databaseSetup = DBIO.seq(
     Links.schema.create,
+    Users.schema.create,
 
     Links forceInsertAll Seq(
       Link(1, "http://howtographql.com", "Awesome community driven GraphQL tutorial", DateTime(2017,9,12)),
       Link(2, "http://graphql.org", "Official GraphQL web page", DateTime(2017, 10, 1)),
       Link(3, "https://facebook.github.io/graphql/", "GraphQL specification", DateTime(2017, 10, 2))
+    ),
+
+    Users forceInsertAll Seq(
+      User(1, "mario", "mario@example.com", "s3cr3t"),
+      User(2, "Fred", "fred@flinstones.com", "wilmalove")
     )
   )
 

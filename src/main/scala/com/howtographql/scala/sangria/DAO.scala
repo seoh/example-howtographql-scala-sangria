@@ -3,7 +3,7 @@ package com.howtographql.scala.sangria
 import slick.jdbc.H2Profile.api._
 import DBSchema._
 import scala.concurrent.Future
-import com.howtographql.scala.sangria.models.{Link, User}
+import com.howtographql.scala.sangria.models.{Link, User, Vote}
 
 class DAO(db: Database) {
   def allLinks = db.run(Links.result)
@@ -16,5 +16,10 @@ class DAO(db: Database) {
   def getUsers(ids: Seq[Int]): Future[Seq[User]] = {
     println(s"DAO.getUsers [${ids.mkString(", ")}]")
     db.run(Users.filter(_.id inSet ids).result)
+  }
+
+  def getVotes(ids: Seq[Int]): Future[Seq[Vote]] = {
+    println(s"DAO.getVotes [${ids.mkString(", ")}]")
+    db.run(Votes.filter(_.id inSet ids).result)
   }
 }

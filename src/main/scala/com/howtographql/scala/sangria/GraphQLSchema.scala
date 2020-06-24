@@ -6,7 +6,7 @@ import sangria.schema.ListType
 
 import sangria.schema.{IntType, StringType, Schema, fields}
 import sangria.macros.derive._
-import models.{Link, User, DateTimeCoerceViolation}
+import models.{Link, User, Vote, DateTimeCoerceViolation}
 import sangria.schema.OptionType
 import sangria.schema.Argument
 import sangria.schema.ListInputType
@@ -33,7 +33,19 @@ object GraphQLSchema {
     }
   )
 
-  // implicit val LinkType = ObjectType[Unit, Link](
+
+  // val IdentifiableType = InterfaceType(
+  //   "Identifiable",
+  //   fields[Unit, Identifiable](
+  //     Field("id", IntType, resolve = _.value.id)
+  //   )
+  // )
+
+  // implicit val LinkType = deriveObjectType[Unit, Link](
+  //     Interfaces(IdentifiableType)
+  // )
+
+  // // implicit val LinkType = ObjectType[Unit, Link](
   //   "Link",
   //   fields[Unit, Link](
   //     Field("id", IntType, resolve = _.value.id),
@@ -43,9 +55,8 @@ object GraphQLSchema {
   //   )
   // )
   val LinkType = deriveObjectType[Unit, Link](
-    ReplaceField("createdAt", Field("createdAt", GraphQLDateTime, resolve = _.value.createdAt))
+    // ReplaceField("createdAt", Field("createdAt", GraphQLDateTime, resolve = _.value.createdAt))
   )
-  implicit val linkHasId = HasId[Link, Int](_.id)
 
   val linksFetcher = Fetcher(
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getLinks(ids)
@@ -53,12 +64,17 @@ object GraphQLSchema {
 
 
   val UserType = deriveObjectType[Unit, User]()
-  implicit val userHasId = HasId[User, Int](_.id)
   val usersFetcher = Fetcher(
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getUsers(ids)
   )
 
-  val Resolver = DeferredResolver.fetchers(linksFetcher, usersFetcher)
+  val VoteType = deriveObjectType[Unit, Vote]()
+  val votesFetcher = Fetcher(
+    (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getVotes(ids)
+  )
+
+
+  val Resolver = DeferredResolver.fetchers(linksFetcher, usersFetcher, votesFetcher)
 
 
   val Id = Argument("id", IntType)
@@ -85,6 +101,12 @@ object GraphQLSchema {
         ListType(UserType),
         arguments = Ids :: Nil,
         resolve = c => usersFetcher.deferSeq(c.arg(Ids))
+      ),
+      Field(
+        "votes",
+        ListType(VoteType),
+        arguments = Ids :: Nil,
+        resolve = c => votesFetcher.deferSeq(c.arg(Ids))
       )
     )
   )

@@ -16,6 +16,8 @@ import sangria.execution.deferred.DeferredResolver
 import sangria.schema.ScalarType
 import akka.http.scaladsl.model.DateTime
 import sangria.ast.StringValue
+import sangria.execution.deferred.Relation
+import sangria.execution.deferred.RelationIds
 
 
 object GraphQLSchema {
@@ -58,8 +60,10 @@ object GraphQLSchema {
     // ReplaceField("createdAt", Field("createdAt", GraphQLDateTime, resolve = _.value.createdAt))
   )
 
-  val linksFetcher = Fetcher(
-    (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getLinks(ids)
+  val linkByUserRel = Relation[Link, Int]("byUser", link => Seq(link.postedBy))
+  val linksFetcher = Fetcher.rel(
+    (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getLinks(ids),
+    (ctx: MyContext, ids: RelationIds[Link]) => ctx.dao.getLinksByUserIds(ids(linkByUserRel))
   )
 
 

@@ -22,4 +22,9 @@ class DAO(db: Database) {
     println(s"DAO.getVotes [${ids.mkString(", ")}]")
     db.run(Votes.filter(_.id inSet ids).result)
   }
+
+  def getLinksByUserIds(ids: Seq[Int]): Future[Seq[Link]] = {
+    println(s"DAO.getLinksByUserIds [${ids.mkString(", ")}]")
+    db.run(Links.filter(_.postedBy inSet ids).result)
+  }
 }

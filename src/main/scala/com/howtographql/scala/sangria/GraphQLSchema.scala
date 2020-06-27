@@ -57,7 +57,8 @@ object GraphQLSchema {
   //   )
   // )
   val LinkType = deriveObjectType[Unit, Link](
-    // ReplaceField("createdAt", Field("createdAt", GraphQLDateTime, resolve = _.value.createdAt))
+    ReplaceField("postedBy",
+      Field("postedBy", UserType, resolve = c => userFetcher.defer(c.value.postedBy)))
   )
 
   val linkByUserRel = Relation[Link, Int]("byUser", link => Seq(link.postedBy))

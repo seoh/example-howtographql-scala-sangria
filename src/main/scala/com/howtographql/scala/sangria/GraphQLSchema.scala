@@ -20,6 +20,7 @@ import sangria.execution.deferred.Relation
 import sangria.execution.deferred.RelationIds
 import shapeless.ops.record.Fields
 import sangria.schema.InputObjectType
+import sangria.schema.UpdateCtx
 
 
 object GraphQLSchema {
@@ -159,6 +160,9 @@ object GraphQLSchema {
   val LinkIdArg = Argument("linkId", IntType)
   val UserIdArg = Argument("userId", IntType)
 
+  val EmailArg = Argument("email", StringType)
+  val PasswordArg = Argument("password", StringType)
+
   val Mutation = ObjectType(
     "mutation",
     fields[MyContext, Unit](
@@ -172,6 +176,7 @@ object GraphQLSchema {
         "createLink",
         LinkType,
         arguments = UrlArg :: DescArg :: PostedByArg :: Nil,
+        tags = Authorized :: Nil,
         resolve = c => c.ctx.dao.createLink(c.arg(UrlArg), c.arg(DescArg), c.arg(PostedByArg))
       ),
       Field(
@@ -179,6 +184,15 @@ object GraphQLSchema {
         VoteType,
         arguments = LinkIdArg :: UserIdArg :: Nil,
         resolve = c => c.ctx.dao.createVote(c.arg(LinkIdArg), c.arg(UserIdArg))
+      ),
+      Field(
+        "login",
+        UserType,
+        arguments = EmailArg :: PasswordArg :: Nil,
+        resolve = c => UpdateCtx(c.ctx.login(c.arg(EmailArg), c.arg(PasswordArg))) { user: User =>
+          c.ctx.copy(currentUser = Some(user))
+        }
+
       )
     )
   )

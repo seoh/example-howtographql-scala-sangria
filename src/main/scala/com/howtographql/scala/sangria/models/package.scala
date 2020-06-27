@@ -21,4 +21,7 @@ package object models {
   case object DateTimeCoerceViolation extends Violation {
     def errorMessage: String = "Error during parsing DateTime"
   }
+
+  case class AuthProviderEmail(email: String, password: String)
+  case class AuthProviderSignupData(email: AuthProviderEmail)
 }

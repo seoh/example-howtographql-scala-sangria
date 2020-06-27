@@ -6,7 +6,7 @@ import sangria.schema.ListType
 
 import sangria.schema.{IntType, StringType, Schema, fields}
 import sangria.macros.derive._
-import models.{Link, User, Vote, DateTimeCoerceViolation}
+import models._
 import sangria.schema.OptionType
 import sangria.schema.Argument
 import sangria.schema.ListInputType
@@ -19,6 +19,7 @@ import sangria.ast.StringValue
 import sangria.execution.deferred.Relation
 import sangria.execution.deferred.RelationIds
 import shapeless.ops.record.Fields
+import sangria.schema.InputObjectType
 
 
 object GraphQLSchema {
@@ -133,6 +134,14 @@ object GraphQLSchema {
       )
     )
   )
+
+
+  implicit val AuthProviderEmailInputType: InputObjectType[AuthProviderEmail] = deriveInputObjectType[AuthProviderEmail](
+    InputObjectTypeName("AUTH_PROVIDER_EMAIL")
+  )
+
+  lazy val AuthProviderSignupDataInputType: InputObjectType[AuthProviderSignupData] = deriveInputObjectType[AuthProviderSignupData]()
+
 
   val SchemaDefinition = Schema(QueryType)
 }

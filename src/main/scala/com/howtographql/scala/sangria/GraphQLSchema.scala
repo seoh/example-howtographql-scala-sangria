@@ -142,6 +142,12 @@ object GraphQLSchema {
 
   lazy val AuthProviderSignupDataInputType: InputObjectType[AuthProviderSignupData] = deriveInputObjectType[AuthProviderSignupData]()
 
+  import sangria.marshalling.sprayJson._
+  import spray.json.DefaultJsonProtocol._
+
+  implicit val authProviderEmailFormat = jsonFormat2(AuthProviderEmail)
+  implicit val authProviderSignupDataFormat = jsonFormat1(AuthProviderSignupData)
+
 
   val NameArg = Argument("name", StringType)
   val AuthProviderArg = Argument("authProvider", AuthProviderSignupDataInputType)

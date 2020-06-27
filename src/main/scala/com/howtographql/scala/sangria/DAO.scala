@@ -69,4 +69,16 @@ class DAO(db: Database) {
 
     db.run(insertAndReturnLinkQuery += newLink)
   }
+
+  def createVote(linkId: Int, userId: Int): Future[Vote] = {
+    println(s"DAO.createVote [$linkId, $userId]")
+
+    val newVote = Vote(0, userId, linkId)
+
+    val insertAndReturnVoteQuery = (Votes returning Votes.map(_.id)) into {
+      (vote, id) => vote.copy(id = id)
+    }
+
+    db.run(insertAndReturnVoteQuery += newVote)
+  }
 }

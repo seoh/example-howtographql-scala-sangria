@@ -58,7 +58,7 @@ object GraphQLSchema {
   // )
   val LinkType = deriveObjectType[Unit, Link](
     ReplaceField("postedBy",
-      Field("postedBy", UserType, resolve = c => userFetcher.defer(c.value.postedBy)))
+      Field("postedBy", UserType, resolve = c => usersFetcher.defer(c.value.postedBy)))
   )
 
   val linkByUserRel = Relation[Link, Int]("byUser", link => Seq(link.postedBy))
@@ -68,12 +68,16 @@ object GraphQLSchema {
   )
 
 
-  val UserType = deriveObjectType[Unit, User]()
+  lazy val UserType: ObjectType[Unit, User] = deriveObjectType[Unit, User](
+    AddFields(
+      Field("links", ListType(LinkType), resolve = c => linksFetcher.deferRelSeq(linkByUserRel, c.value.id))
+    )
+  )
   val usersFetcher = Fetcher(
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getUsers(ids)
   )
 
-  val VoteType = deriveObjectType[Unit, Vote]()
+  lazy val VoteType = deriveObjectType[Unit, Vote]()
   val votesFetcher = Fetcher(
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getVotes(ids)
   )

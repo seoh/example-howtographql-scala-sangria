@@ -18,6 +18,8 @@ import sangria.execution.QueryAnalysisError
 import sangria.parser.QueryParser
 import sangria.marshalling.sprayJson._
 
+import models.{AuthenticationException, AuthorizationException}
+
 
 object GraphQLServer {
   private val dao = DBSchema.createDatabase
@@ -44,6 +46,11 @@ object GraphQLServer {
     }
   }
 
+  val errorHandler = ExceptionHandler {
+    case (_, AuthenticationException(message)) => HandledException(message)
+    case (_, AuthorizationException(message)) => HandledException(message)
+  }
+
   private def executeGraphQLQuery(query: Document, operation: Option[String], vars: JsObject)(implicit ec: ExecutionContext) = {
     Executor.execute(
       GraphQLSchema.SchemaDefinition,
@@ -51,7 +58,8 @@ object GraphQLServer {
       MyContext(dao),
       variables = vars,
       operationName = operation,
-      deferredResolver = GraphQLSchema.Resolver
+      deferredResolver = GraphQLSchema.Resolver,
+      exceptionHandler = errorHandler
     ).map(OK -> _)
       .recover {
       case error: QueryAnalysisError => BadRequest -> error.resolveError

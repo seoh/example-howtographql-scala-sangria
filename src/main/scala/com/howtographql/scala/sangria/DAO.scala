@@ -57,4 +57,16 @@ class DAO(db: Database) {
 
     db.run(insertAndReturnUserQuery += newUser)
   }
+
+  def createLink(url: String, description: String, postedBy: Int): Future[Link] = {
+    println(s"DAO.createLink [$url, $description, $postedBy]")
+
+    val newLink = Link(0, url, description, postedBy)
+
+    val insertAndReturnLinkQuery = (Links returning Links.map(_.id)) into {
+      (link, id) => link.copy(id = id)
+    }
+
+    db.run(insertAndReturnLinkQuery += newLink)
+  }
 }

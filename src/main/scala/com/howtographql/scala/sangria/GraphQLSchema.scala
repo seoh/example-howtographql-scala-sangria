@@ -18,6 +18,7 @@ import akka.http.scaladsl.model.DateTime
 import sangria.ast.StringValue
 import sangria.execution.deferred.Relation
 import sangria.execution.deferred.RelationIds
+import shapeless.ops.record.Fields
 
 
 object GraphQLSchema {
@@ -58,7 +59,10 @@ object GraphQLSchema {
   // )
   val LinkType = deriveObjectType[Unit, Link](
     ReplaceField("postedBy",
-      Field("postedBy", UserType, resolve = c => usersFetcher.defer(c.value.postedBy)))
+      Field("postedBy", UserType, resolve = c => usersFetcher.defer(c.value.postedBy))),
+    AddFields(
+      Field("votes", ListType(VoteType), resolve = c => votesFetcher.deferRelSeq(voteByLinkRel, c.value.id))
+    )
   )
 
   val linkByUserRel = Relation[Link, Int]("byUser", link => Seq(link.postedBy))
@@ -78,16 +82,18 @@ object GraphQLSchema {
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getUsers(ids)
   )
 
-  lazy val VoteType = deriveObjectType[Unit, Vote](
-    ExcludeFields("userId"),
+  lazy val VoteType: ObjectType[Unit, Vote] = deriveObjectType[Unit, Vote](
+    ExcludeFields("userId", "linkId"),
     AddFields(
-      Field("user", UserType, resolve = c => userFetcher.defer(c.value.userId))
+      Field("user", UserType, resolve = c => usersFetcher.defer(c.value.userId)),
+      Field("link", LinkType, resolve = c => linksFetcher.defer(c.value.linkId))
     )
   )
   val voteByUserRel = Relation[Vote, Int]("byUser", v => Seq(v.userId))
+  val voteByLinkRel = Relation[Vote, Int]("byLink", v => Seq(v.linkId))
   val votesFetcher = Fetcher.rel(
     (ctx: MyContext, ids: Seq[Int]) => ctx.dao.getVotes(ids),
-    (ctx: MyContext, ids: RelationIds[Vote]) => ctx.dao.getVotesByUserIds(ids(voteByUserRel))
+    (ctx: MyContext, ids: RelationIds[Vote]) => ctx.dao.getVotesByRelationIds(ids)
   )
 
 

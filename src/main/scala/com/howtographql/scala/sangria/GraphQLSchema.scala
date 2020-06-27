@@ -143,5 +143,20 @@ object GraphQLSchema {
   lazy val AuthProviderSignupDataInputType: InputObjectType[AuthProviderSignupData] = deriveInputObjectType[AuthProviderSignupData]()
 
 
-  val SchemaDefinition = Schema(QueryType)
+  val NameArg = Argument("name", StringType)
+  val AuthProviderArg = Argument("authProvider", AuthProviderSignupDataInputType)
+
+  val Mutation = ObjectType(
+    "mutation",
+    fields[MyContext, Unit](
+      Field(
+        "createUser",
+        UserType,
+        arguments = NameArg :: AuthProviderArg :: Nil,
+        resolve = c => c.ctx.dao.createUser(c.arg(NameArg), c.arg(AuthProviderArg))
+      )
+    )
+  )
+
+  val SchemaDefinition = Schema(QueryType, Some(Mutation))
 }

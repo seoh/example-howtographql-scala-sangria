@@ -6,6 +6,7 @@ import scala.concurrent.Future
 import com.howtographql.scala.sangria.models.{Link, User, Vote}
 import sangria.execution.deferred.RelationIds
 import sangria.execution.deferred.SimpleRelation
+import com.howtographql.scala.sangria.models.AuthProviderSignupData
 
 class DAO(db: Database) {
   def allLinks = db.run(Links.result)
@@ -43,5 +44,17 @@ class DAO(db: Database) {
         case (SimpleRelation("byLink"), ids: Seq[Int]) => vote.linkId inSet ids
       }).foldLeft(true: Rep[Boolean])(_ || _)
     }).result)
+  }
+
+  def createUser(name: String, authProvider: AuthProviderSignupData): Future[User] = {
+    println(s"DAO.createUser [$name, $authProvider]")
+
+    val newUser = User(0, name, authProvider.email.email, authProvider.email.password)
+
+    val insertAndReturnUserQuery = (Users returning Users.map(_.id)) into {
+      (user, id) => user.copy(id = id)
+    }
+
+    db.run(insertAndReturnUserQuery += newUser)
   }
 }
